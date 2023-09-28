@@ -1,34 +1,31 @@
-# Script written by Bethany Little (bethany.little@ncl.ac.uk) on 04/09/2023. 
-
+# Script written by Bethany Little (bethany.little@ncl.ac.uk) September 2023. 
+# 
 # This script contains code to run through a tutorial for using Canonical 
 # Correlation Analysis (CCA) to test brain-behaviour associations. 
-
-# NOTES
-#
+# 
 # The script requires two datasets: a dataset of 'brain' data (e.g. cortical 
 # thickness for several brain regions) and 'behaviour' data (e.g., scores on 
 # several cognitive tests. These datasets should be saved as csv files that are 
-# formatted such that each row represents one participant and each column 
+# formatted such that each row represents a participant and each column 
 # represents a variable. All variables should be continuous, except the first 
 # column, which should contain subject IDs. 
 # 
 # The script also assumes that data have already been cleaned, i.e., outliers 
-# removed/transformed, missing data removed or imputed, and any confounding 
-# variables regressed out. 
+# have been removed/transformed as neccessary, missing data removed or imputed, 
+# and any confounding variables regressed out (e.g. age, sex, premorbid IQ). 
 # 
 # Parts of the script need to be edited to suit your own data and machine 
-# (look out for "***EDIT THIS***" in the script). 
-
+# (look out for where it says "***EDIT THIS***" in the script). 
 
 
 ##### 0. install and load packages #####
 
 # install packages
-#install.packages("CCA")
+install.packages("CCA")
 #remotes::install_github('LCBC-UiO/ggseg3d') 
 #remotes::install_github('LCBC-UiO/ggsegExtra') 
 
-# load in packages
+# load packages
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
