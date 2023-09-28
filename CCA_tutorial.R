@@ -21,7 +21,7 @@
 ##### 0. install and load packages #####
 
 # install packages
-install.packages("CCA")
+#install.packages("CCA")
 #remotes::install_github('LCBC-UiO/ggseg3d') 
 #remotes::install_github('LCBC-UiO/ggsegExtra') 
 
@@ -49,13 +49,22 @@ remove(list = ls())
 
 
 # set the working directory ***EDIT THIS***
-setwd("C:/Users/nbl38/CCA_output")
+#setwd("C:/Users/nbl38/CCA_output")
+setwd("H:/GitHub/CCA_tutorial")
 
-# load in datasets using read.csv (row.names=1 sets the first column [i.e., 
-# subject IDs] as the rownames of the dataframe)
-brain <- read.csv("brain_data.csv", row.names=1)
-behav <- read.csv("behav_data.csv", row.names=1)
+# load in datasets using read.csv (row.names=1 sets the first 
+# column (subject IDs) in the csv file as the rownames of the dataframe)
+brain <- read.csv("NIMH-IHV_corticalthickness.csv", row.names=1)
+behav <- read.csv("NIMH-IHV_NIHtoolbox.csv", row.names=1)
 
+# remove mean thickness variables from brain data
+brain <- subset(brain, select=-c(lh_MeanThickness_thickness,rh_MeanThickness_thickness))
+
+# save the number of variables in each dataset
+nbrain <- ncol(brain)
+nbehav <- ncol(behav)
+# save sample size
+sampleN <- nrow(brain)
 
 
 ##### 2. PCA #####
@@ -95,7 +104,7 @@ testCors
 
 # check which variables have outliers (scores >3 SDs away from the mean)
 outs <- c() 
-for (i in 1:length(colnames(brain))){
+for (i in 1:nbrain){
   varname <- colnames(brain)[i]
   var <- brain[[varname]]
   Nhigh <- sum(var > (mean(var, na.rm=T) + 3*sd(var, na.rm=T)), na.rm=T)
@@ -277,15 +286,10 @@ write.csv(CCA.braincrossLoad.all,"CCA.Vcrossload.ROIs.csv")
 ##### 4. Test significance of canonical correlations #####
 
 
-# get sample size and number of variables in each dataset
-sampleN <- nrow(brain)
-U.vars <- ncol(behav)
-V.vars <- ncol(brain.PCs)
-
 # run significance tests and save output in a txt file (here we use Wilks's test 
 # as a common test of significance, but also Pillai's trace as a robust test)
-cca.wilks <- p.asym(rho=CCA$cor, N=sampleN, p=U.vars, q=V.vars, tstat="Wilks")
-cca.pillai <- p.asym(rho=CCA$cor, N=sampleN, p=U.vars, q=V.vars, tstat="Pillai")
+cca.wilks <- p.asym(rho=CCA$cor, N=sampleN, p=nbehav, q=nbrain, tstat="Wilks")
+cca.pillai <- p.asym(rho=CCA$cor, N=sampleN, p=nbehav, q=nbrain, tstat="Pillai")
 
 # save output in txt file
 sink("CCA_sigTests.txt")
