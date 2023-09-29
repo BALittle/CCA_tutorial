@@ -1,0 +1,17 @@
+Results of permutation test for CCA (untransformed behav; brain data not z-scored; nboot=10000) 
+
+ Permutation test - Wilks 
+original value of the statistic (without resampling): 0.419 
+summary of N=nboot permuted statistics:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2649  0.4107  0.4444  0.4452  0.4785  0.6419 
+mean of N=nboot permuted statistics=0.445 
+number of permutation resamplings that resulted in a more extreme value of the statistic than stat0: 3074 
+p-value derived from nexcess: 0.307 
+
+ Permutation test - Pillai 
+original value of the statistic (without resampling): 0.77 
+summary of N=nboot permuted statistics:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.4399  0.6622  0.7226  0.7250  0.7849  1.0921 
+mean of N=nboot permuted statistics=0.725 
+number of permutation resamplings that resulted in a more extreme value of the statistic than stat0: 3007 
+p-value derived from nexcess: 0.301 

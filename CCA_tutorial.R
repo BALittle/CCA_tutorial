@@ -47,10 +47,11 @@ library(plotly)
 # clear the environment
 remove(list = ls())
 
-
-# set the working directory ***EDIT THIS***
-#setwd("C:/Users/nbl38/CCA_output")
-setwd("H:/GitHub/CCA_tutorial")
+# set the working directory     ***EDIT THIS***
+CCAdir <- c("/home/campus.ncl.ac.uk/nbl38/GitHub/CCA_tutorial")
+#CCAdir <- c("C:/Users/nbl38/GitHub/CCA_output")
+#CCAdir <- c("H:/GitHub/CCA_tutorial")
+setwd(CCAdir)
 
 # load in datasets using read.csv (row.names=1 sets the first 
 # column (subject IDs) in the csv file as the rownames of the dataframe)
@@ -65,6 +66,12 @@ nbrain <- ncol(brain)
 nbehav <- ncol(behav)
 # save sample size
 sampleN <- nrow(brain)
+# save variable names
+vars.behav <- colnames(behav)
+vars.brain <- colnames(brain)
+
+# change the working directory to a folder to the Results folder
+setwd(paste0(CCAdir,"/Results"))
 
 
 ##### 2. PCA #####
@@ -208,8 +215,8 @@ Outbehav
 
 # if any of the PCs are not normal or have outliers, visualise the data using 
 # histograms and boxplots as follows:
-hist(behav$d2_ContPerf)
-boxplot(behav$d2_ContPerf)
+hist(behav[1])
+boxplot(behav[1])
 
 
 # The following script assumes that the datasets have multiariate normality and 
@@ -254,8 +261,8 @@ CCA.brain.load.r <- data.frame(rcorr(as.matrix(brain), as.matrix(CCA.subYscore),
 CCA.brain.load.p <- data.frame(rcorr(as.matrix(brain), as.matrix(CCA.subYscore), type="pearson")$P)
 CCA.brain.load.n <- data.frame(rcorr(as.matrix(brain), as.matrix(CCA.subYscore), type="pearson")$n)
 # merge into one data frame and save correlation results
-CCA.brain.load.all <- cbind(rbind(rep("rho", 7), data.frame(CCA.brain.load.r[1:68,69:75])), 
-                            rbind(rep("p", 7), CCA.brain.load.p[1:68,69:75]))
+CCA.brain.load.all <- cbind(rbind(rep("rho", nbehav), data.frame(CCA.brain.load.r[1:nbrain,(nbrain+1):(nbrain+nbehav)])), 
+                            rbind(rep("p", nbehav), CCA.brain.load.p[1:nbrain,(nbrain+1):(nbrain+nbehav)]))
 
 # To get the canonical cross-loadings for the original brain variables (rather 
 # than the PCs) with behavioural canonical variates (U), correlate the original 
@@ -265,8 +272,8 @@ CCA.braincrossLoad.r <- data.frame(rcorr(as.matrix(brain), as.matrix(CCA.subXsco
 CCA.braincrossLoad.p <- data.frame(rcorr(as.matrix(brain), as.matrix(CCA.subXscore), type="pearson")$P)
 CCA.braincrossLoad.n <- data.frame(rcorr(as.matrix(brain), as.matrix(CCA.subXscore), type="pearson")$n)
 # merge into one data frame and s Save correlation results (without group)
-CCA.braincrossLoad.all <- cbind(rbind(paste("r_", c(1:7), sep = ""), data.frame(CCA.braincrossLoad.r[1:68,69:75])), 
-                                rbind(paste("p_", c(1:7), sep = ""), CCA.braincrossLoad.p[1:68,69:75]))
+CCA.braincrossLoad.all <- cbind(rbind(paste("r_", c(1:nbehav), sep = ""), data.frame(CCA.braincrossLoad.r[1:nbrain,(nbrain+1):(nbrain+nbehav)])), 
+                                rbind(paste("p_", c(1:nbehav), sep = ""), CCA.braincrossLoad.p[1:nbrain,(nbrain+1):(nbrain+nbehav)]))
 colnames(CCA.braincrossLoad.all) <- CCA.braincrossLoad.all[1,] # set column names
 CCA.braincrossLoad.all <- CCA.braincrossLoad.all[-c(1),] # delete first row
 
@@ -290,6 +297,10 @@ write.csv(CCA.braincrossLoad.all,"CCA.Vcrossload.ROIs.csv")
 # as a common test of significance, but also Pillai's trace as a robust test)
 cca.wilks <- p.asym(rho=CCA$cor, N=sampleN, p=nbehav, q=nbrain, tstat="Wilks")
 cca.pillai <- p.asym(rho=CCA$cor, N=sampleN, p=nbehav, q=nbrain, tstat="Pillai")
+
+# see p-values for each canonical correlation
+cca.wilks$p.value
+cca.pillai$p.value
 
 # save output in txt file
 sink("CCA_sigTests.txt")
@@ -341,6 +352,7 @@ sink()
 
 ###### 6. a) scatterplot of first canonical correlation ######
 
+# make scatterplot using ggplot2
 CCA.1stScatter <- ggplot(brain, aes(x=as.matrix(CCA.subXscore[1]), y=as.matrix(CCA.subYscore[1]))) + geom_point() +
   labs(title="Scatterplot of the first canonical correlation",
        x="U1 (cogntitive data)",
@@ -348,8 +360,9 @@ CCA.1stScatter <- ggplot(brain, aes(x=as.matrix(CCA.subXscore[1]), y=as.matrix(C
        subtitle=paste0("(n=", nrow(brain),")")) +
   theme_light() +
   theme(text = element_text(size = 16))
+CCA.1stScatter
 
-# save as pdf file
+# save scatterplot as pdf file
 pdf(file="CCA_1stcanobehavair_scatter.pdf")
 CCA.1stScatter
 dev.off()
@@ -363,10 +376,6 @@ dev.off()
 # This part of the scripts assumes that the brain data was parcellated using 
 # the desikan-killianny atlas. 
 # Mowinckel & Vidal-Piñeiro (2020) provide a tutorial on how to use ggseg.
-
-# create vector of ROI names
-ROIs <- colnames(brain)
-N_ROI <- length(ROIs)
 
 # get first canonical variate statistics and set up to use in ggseg
 CCA.ggseg <- subset(CCA.braincrossLoad.all, select=c("r_1", "p_1"))
@@ -382,19 +391,18 @@ rholim <- round(rholim,1)+.1
 # plot results using ggseg
 CCA.ROIplot <- CCA.ggseg %>% 
   ggseg(mapping = aes(fill=r_1), position="stacked") + 
-  labs(title = paste0("Crossloadings of first canonical variate for each region"), 
+  labs(title = paste0("Cross-loadings of each brain region"), 
        fill = "r") + 
   scale_fill_gradient2(low = "red3", mid="white", high = "mediumblue", 
                        limits=c(-rholim,rholim)) +
   guides(fill = guide_colourbar(barheight = 6)) +
-  theme_minimal() + theme(text = element_text(size = 20))
+  theme_minimal() + theme(text = element_text(size = 12))
 CCA.ROIplot
 
 # save as pdf file
-pdf(paste0(mm,".",gp,ztype,"_CCA.rho_2d.pdf"))
+pdf("CCA.brain.pdf")
 CCA.ROIplot
 dev.off()
-
 
 
 ##### END #####
