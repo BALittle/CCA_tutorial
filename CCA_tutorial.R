@@ -3,6 +3,8 @@
 # This script contains code to run through a tutorial for using Canonical 
 # Correlation Analysis (CCA) to test brain-behaviour associations. 
 # 
+# Results are saved in csv, txt and pdf files in a folder called "Results". 
+# 
 # The script requires two datasets: a dataset of 'brain' data (e.g. cortical 
 # thickness for several brain regions) and 'behaviour' data (e.g., scores on 
 # several cognitive tests. These datasets should be saved as csv files that are 
@@ -13,44 +15,30 @@
 # The script also assumes that data have already been cleaned, i.e., outliers 
 # have been removed/transformed as neccessary, missing data removed or imputed, 
 # and any confounding variables regressed out (e.g. age, sex, premorbid IQ). 
-# 
-# Parts of the script need to be edited to suit your own data and machine 
-# (look out for where it says "***EDIT THIS***" in the script). 
 
 
-##### 0. install and load packages #####
-
-# install packages
-#install.packages("CCA")
-#remotes::install_github('LCBC-UiO/ggseg3d') 
-#remotes::install_github('LCBC-UiO/ggsegExtra') 
+##### 0. load packages #####
 
 # load packages
-library(dplyr)
-library(tidyverse)
 library(ggplot2)
-library(Hmisc)
 library(MVN)
 library(CCA)
 library(CCP)
 library(crayon)
+library(Hmisc)
+library(dplyr)
+library(tidyverse)
 library(ggseg)
-library(data.table)
-library(stringr)
-library(plotly)
-
 
 
 ##### 1. set up the environment and load data #####
 
-
 # clear the environment
 remove(list = ls())
 
-# set the working directory     ***EDIT THIS***
-CCAdir <- c("/home/campus.ncl.ac.uk/nbl38/GitHub/CCA_tutorial")
-#CCAdir <- c("C:/Users/nbl38/GitHub/CCA_output")
-#CCAdir <- c("H:/GitHub/CCA_tutorial")
+# set the working directory     ***EDIT THIS FILEPATH***
+#CCAdir <- c("/home/campus.ncl.ac.uk/nbl38/GitHub/CCA_tutorial")
+CCAdir <- c("H:/GitHub/CCA_tutorial")
 setwd(CCAdir)
 
 # load in datasets using read.csv (row.names=1 sets the first 
@@ -75,7 +63,6 @@ setwd(paste0(CCAdir,"/Results"))
 
 
 ##### 2. PCA #####
-
 
 # If the number of (total) variables is larger than the sample size, then data 
 # reduction techniques should be used to reduce the number of variables in one 
@@ -127,7 +114,6 @@ Mardia.brain <- MVN::mvn(data = brain, mvnTest ="mardia", univariateTest = "SW")
 Mardia.brain$multivariateNormality
 
 
-
 ###### 2. b) run PCA ######
 
 # run the PCA
@@ -148,9 +134,7 @@ brain.PCs <- data.frame(pca.brain$x[,1:pca.brain.N])    # save only the PCs that
 
 ##### 3. Canonical Correlation Analysis (CCA) #####
 
-
 ###### 3. a) check data meets assumptions for CCA ######
-
 
 # CCA assumes that the data are suitable for correlation-based analysis. 
 # Check both datasets have multivariate normality and no extreme outliers. 
@@ -215,8 +199,8 @@ Outbehav
 
 # if any of the PCs are not normal or have outliers, visualise the data using 
 # histograms and boxplots as follows:
-hist(behav[1])
-boxplot(behav[1])
+hist(behav[,1])
+boxplot(behav[,1])
 
 
 # The following script assumes that the datasets have multiariate normality and 
@@ -224,9 +208,7 @@ boxplot(behav[1])
 # transform variables accordingly. 
 
 
-
 ###### 3. b) run CCA ######
-
 
 # before running CCA, check participants are in the same order in each dataset
 if ((sum(rownames(brain)!=rownames(behav)))==0){
@@ -289,9 +271,7 @@ write.csv(CCA.brain.load.all,"CCA.Vloadings.ROIs.csv")
 write.csv(CCA.braincrossLoad.all,"CCA.Vcrossload.ROIs.csv")
 
 
-
 ##### 4. Test significance of canonical correlations #####
-
 
 # run significance tests and save output in a txt file (here we use Wilks's test 
 # as a common test of significance, but also Pillai's trace as a robust test)
@@ -307,7 +287,6 @@ sink("CCA_sigTests.txt")
 cca.wilks
 cca.pillai
 sink() 
-
 
 
 ##### 5. Perform permutation test for CCA results (if first CCA looks ok) #####
@@ -346,14 +325,14 @@ cat(paste0("p-value derived from nexcess: ", round(CCA.perm.P$p.value,3)), "\n")
 sink() 
 
 
-
 ##### 6. Visualize results #####
-
 
 ###### 6. a) scatterplot of first canonical correlation ######
 
 # make scatterplot using ggplot2
-CCA.1stScatter <- ggplot(brain, aes(x=as.matrix(CCA.subXscore[1]), y=as.matrix(CCA.subYscore[1]))) + geom_point() +
+CCA.1stScatter <- ggplot(brain, aes(x=as.matrix(CCA.subXscore[1]), 
+                                    y=as.matrix(CCA.subYscore[1]))) + 
+  geom_point() +
   labs(title="Scatterplot of the first canonical correlation",
        x="U1 (cogntitive data)",
        y="V1 (brain data)",
