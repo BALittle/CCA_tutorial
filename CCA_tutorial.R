@@ -1,33 +1,16 @@
-# Script written by Bethany Little (bethany.little@ncl.ac.uk) September 2023. 
-# 
-# This script contains code to run through a tutorial for using Canonical 
-# Correlation Analysis (CCA) to test brain-behaviour associations. 
-# 
-# Results are saved in csv, txt and pdf files in a folder called "Results". 
-# 
-# The script requires two datasets: a dataset of 'brain' data (e.g. cortical 
-# thickness for several brain regions) and 'behaviour' data (e.g., scores on 
-# several cognitive tests. These datasets should be saved as csv files that are 
-# formatted such that each row represents a participant and each column 
-# represents a variable. All variables should be continuous, except the first 
-# column, which should contain subject IDs. 
-# 
-# The script also assumes that data have already been cleaned, i.e., outliers 
-# have been removed/transformed as neccessary, missing data removed or imputed, 
-# and any confounding variables regressed out (e.g. age, sex, premorbid IQ). 
+# Canonical Correlation Analysis (CCA) for brain-behaviour associations. 
+# bethany.little@ncl.ac.uk 2023
 
 
 ##### 0. load packages #####
 
 # load packages
-library(ggplot2)
+library(tidyverse)
+library(crayon)
+library(Hmisc)
 library(MVN)
 library(CCA)
 library(CCP)
-library(crayon)
-library(Hmisc)
-library(dplyr)
-library(tidyverse)
 library(ggseg)
 
 
@@ -36,9 +19,8 @@ library(ggseg)
 # clear the environment
 remove(list = ls())
 
-# set the working directory     ***EDIT THIS FILEPATH***
-#CCAdir <- c("/home/campus.ncl.ac.uk/nbl38/GitHub/CCA_tutorial")
-CCAdir <- c("H:/GitHub/CCA_tutorial")
+# set the working directory to the source file location
+CCAdir <- paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/")
 setwd(CCAdir)
 
 # load in datasets using read.csv (row.names=1 sets the first 
@@ -79,19 +61,18 @@ setwd(paste0(CCAdir,"/Results"))
 # To use PCA, data should: 
 # 1. be multiple continuous variables (or ordinal)
 # 2. have linear relationship between all variables
-# 3. have sampling adequacy (rule-of-thumb are a min of 150 cases
+# 3. have sampling adequacy (rule-of-thumb are a min of 150 cases)
 # 4. have adequate correlations between the variables 
 # 5. have no significant outliers (component scores >3SDs away from the mean) 
 # 6. have multivariate normality
-# The rest of the script assumes that the data meets these requirements. Some 
-# suggestions of how to test some of these assumptions are below. 
+# The rest of the script assumes that the data meets these requirements. 
+# Some suggestions of how to test some of these assumptions are below. 
 
-# test if linear relationships exist between all variables by plotting 
-# scatterplots between pairs of variables, e.g.: 
+# can test linear relationships with scatterplots of pairs of variables, e.g.: 
 ggplot(brain, aes(lh_caudalmiddlefrontal_thickness,lh_posteriorcingulate_thickness)) + geom_point() + geom_smooth(method="lm", alpha=0.1, fill="Blue")
 ggplot(brain, aes(lh_transversetemporal_thickness,lh_parsorbitalis_thickness)) + geom_point() + geom_smooth(method="lm", alpha=0.1, fill="Blue")
 
-# test if there are adequate correlations between the variables by creating a 
+# can test if there are adequate correlations between the variables by creating a 
 # correlation matrix - check all variables have at at least 1 correlation above 0.3
 testCors <- data.frame(cor(brain, method = c("pearson")))
 testCors
@@ -166,8 +147,7 @@ for (i in 1:length(brain.PCs)){
 }
 Outbrain.PCs
 
-# if any of the PCs are not normal or have outliers, visualise the data using 
-# histograms and boxplots as follows:
+# if any of the PCs are not normal or have outliers, can visualise the data:
 hist(brain.PCs$PC3)
 boxplot(brain.PCs$PC3)
 
@@ -197,12 +177,12 @@ for (i in 1:length(behav)){
 }
 Outbehav
 
-# if any of the PCs are not normal or have outliers, visualise the data using 
-# histograms and boxplots as follows:
+# if any of the PCs are not normal or have outliers, can visualise the data:
 hist(behav[,1])
 boxplot(behav[,1])
 
 
+# *** PLEASE NOTE BEFORE PROCEEDING ***
 # The following script assumes that the datasets have multiariate normality and 
 # don't have any extreme outliers. If data does not meet these requirement, 
 # transform variables accordingly. 
